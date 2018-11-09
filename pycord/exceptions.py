@@ -16,3 +16,7 @@ class ReusedCommandName(PycordError):
 
 class ParseError(PycordError):
     pass
+
+
+class InvalidModel(PycordError):
+    pass
