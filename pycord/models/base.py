@@ -1,4 +1,4 @@
-from inspect import isclass
+from inspect import isclass, getmro
 from typing import Optional, List, Dict, _Union, Any
 
 from pycord.exceptions import InvalidModel
@@ -37,7 +37,11 @@ class Model:
         self.d_data = data
         self.d_client = client
 
-        for name, value in self.__class__.__annotations__.items():
+        annotations = {}
+        for obj in getmro(self.__class__)[1::-1]:
+            annotations.update(obj.__annotations__)
+
+        for name, value in annotations.items():
             if isclass(value):
                 setattr(self, name, value(self._get_val(name)))
             else:

@@ -20,3 +20,11 @@ class ParseError(PycordError):
 
 class InvalidModel(PycordError):
     pass
+
+
+class GatewayError(PycordError):
+    pass
+
+
+class AuthenticationError(PycordError):
+    pass

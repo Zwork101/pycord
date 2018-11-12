@@ -1,1 +1,2 @@
 trio==0.9.0
+trio-websocket==0.2

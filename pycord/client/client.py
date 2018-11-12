@@ -1,6 +1,7 @@
+import os
 from typing import Callable, Union
 
-from pycord.exceptions import ReusedCommandName
+from pycord.exceptions import GatewayError, AuthenticationError
 
 
 class Client:
@@ -22,6 +23,8 @@ class Client:
     :type events: Dict[str, :py:class:`~pycord.client.commands.Command`]
     :ivar extensions: A dict containing plugin names to :py:class:`~pycord.client.extensions.Extension`
     :type extensions: Dict[str, :py:class:`~pycord.client.extensions.Extension`]
+    :ivar gateway: The client's connection to the discord gateway, setup in config
+    :type gateway: :py:class:`~pycord.gateway.gate.Gateway`
     """
 
     import pycord.config as config
@@ -39,6 +42,43 @@ class Client:
         self.events = {}
         self.extensions = {}
 
-    @classmethod
-    def add_command(self, match: str, ):
-        pass  # TODO: Work on this aswell
+        self.gateway = self.config.GATEWAY(self)
+        self.dispatcher = self.config.DISPATCHER
+
+        # Will be set later
+        self.token: str = None
+        self._presence: dict = None
+
+    def run(self, token: str = None):
+        """
+        Start the bot, or really just start the gateway
+
+        This method will call .start() on the gateway should be a blocking function. It also sets the token property
+        on the client for further use. If token is not supplied then it will check the environment variables for 'TOKEN'
+
+        :param token: The discord API token generated for the bot. If not supplied will check env variables for 'TOKEN'
+        :type token: str
+        :return: Nothing, as this should not end. If the bot needs to reconnect to the gateway
+        """
+        if not token and 'TOKEN' not in os.environ:
+            raise AuthenticationError("Token not supplied and 'TOKEN' is not an environment variable")
+        self.token = token or os.environ['TOKEN']
+        self.gateway.start()
+
+    def reconnect(self):
+        """
+        Close connection to the discord API, and then create a new one.
+
+        This function calls .close() on the gateway, which should stop whatever thread it's on and end the connection.
+        It will then check to see if the previos gateway had sequence, session_id, or _reconnect properties, and then
+        pass them in as kwargs (They'll still be passed in as None if the properties don't exist). Then it
+
+        :return:
+        """
+        self.gateway.close()
+        kwargs = {}
+        for name in ("sequence", "session_id", "_reconnect"):
+            kwargs[name] = getattr(self.gateway, name, None)
+        if hasattr(self.gateway, "_reconnect") and self.gateway._reconnect:
+            raise GatewayError("Reconnecting too early, possible infinite gateway reconnect")
+        self.gateway = self.config.GATEWAY(self, **kwargs)
