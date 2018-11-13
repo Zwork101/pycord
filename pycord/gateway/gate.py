@@ -1,14 +1,14 @@
 from random import randint
 import json
 from platform import system
-from typing import List, Union
+from typing import Any, List, Union, Dict
 from zlib import decompressobj
 
 from pycord.exceptions import GatewayError, AuthenticationError
 from pycord.gateway.codes import Opcodes
 
 import trio
-import trio_websockets
+import trio_websocket
 
 
 class Gateway:
@@ -63,6 +63,31 @@ class Gateway:
         This method is most commonly used for reconnecting. With that said, if the socket dies and this method is called
         , you should be ready to close an already closed socket.
 
+        :return: Nothing
+        """
+        raise NotImplementedError("This class needs to be inherited and overwritten using this outline.")
+
+    def got_heartbeat(self):
+        """
+        Signify that we received a heartbeat ACK from the server after sending one.
+
+        This function exists as an interface for the dispatcher for when it receives a heartbeat ACK.
+
+        :return: Nothing
+        """
+        raise NotImplementedError("This class needs to be inherited and overwritten using this outline.")
+
+    def send(self, op_code: Union[Opcodes, int], data: Union[Dict[str, Any], int]):
+        """
+        Send information to the gateway.
+
+        This function should take the opcode and data, add the opcode value to the data, dump it to a string and send it
+         to the gateway. If this function is a asynchronous, make sure you use a dispatcher that also supports that.
+
+        :param op_code: The opcode for the data
+        :type op_code: Union[:py:class:`~pycord.gateway.codes.Opcodes`, int]
+        :param data: Any additional information that needs to be sent to gateway.
+        :type data: Dict[str, Any]
         :return: Nothing
         """
         raise NotImplementedError("This class needs to be inherited and overwritten using this outline.")
@@ -139,7 +164,7 @@ class TrioGateway(Gateway):
         self._got_heartbeat = True
         self._closed = False
         self._send_heartbeat, self._receive_heartbeat = trio.open_memory_channel(1)
-        self._conn: trio_websockets.WebSocketClientProtocol = None
+        self._conn: trio_websocket.WebSocketConnection = None
 
     @property
     def identity(self):
@@ -165,7 +190,7 @@ class TrioGateway(Gateway):
         )
 
     @staticmethod
-    def build_payload(op: Opcodes, data: Union[dict, int]):
+    def build_payload(op: Union[Opcodes, int], data: Union[dict, int]):
         """
         Build a encoded json string with the supplied information.
 
@@ -177,11 +202,16 @@ class TrioGateway(Gateway):
         :rtype: bytes
         """
         return json.dumps({
-            "op": op.value,
+            "op": op.value if isinstance(op, Opcodes) else op,
             "d": data
         }).encode()
 
-    async def heartbeat(self, conn: trio_websockets.WebSocketClientProtocol = None):
+    async def send(self, op: Union[Opcodes, int], data: Union[Dict[str, Any], int]):
+        await self._conn.send_message(
+            self.build_payload(op, data)
+        )
+
+    async def heartbeat(self):
         """
         Send heartbeats to the server to confirm it's active
 
@@ -192,19 +222,18 @@ class TrioGateway(Gateway):
         :type conn: trio_websockets.WebSocketClientProtocol
         :return: Nothing. This function should not end unless the connection dies.
         """
-        if conn is None:
-            conn = await self._receive_heartbeat.receive()
+        await self._receive_heartbeat.receive()
         await trio.sleep(self.heartbeat_interval // 1000)
         if not self._got_heartbeat:
             if not self._closed:
                 self.client.reconnect()
         else:
             self._got_heartbeat = False
-            await conn.send(self.build_payload(Opcodes.Heartbeat, self.sequence))
-        if not conn.closed:
-            await self.heartbeat(conn)
+            await self.send(Opcodes.Heartbeat, self.sequence)
+        if not self._conn.is_closed and not self._closed:
+            await self.heartbeat()
 
-    async def get_message(self, conn: trio_websockets.WebSocketClientProtocol):
+    async def get_message(self):
         """
         Fetch for the next message sent by the server.
 
@@ -218,8 +247,8 @@ class TrioGateway(Gateway):
         """
         while True:
             try:
-                msg = await conn.recv()
-            except trio.ClosedResourceError:
+                msg = await self._conn.get_message()
+            except trio_websocket.ConnectionClosed:
                 return
             self.buffer.extend(msg)
             if len(msg) < 4 or msg[-4:] != self.ZLIB_SUFFIX:
@@ -238,45 +267,44 @@ class TrioGateway(Gateway):
 
         :return: Nothing, hopefully won't return ever
         """
-        async with trio_websockets.connect(self.gateway_url()) as conn:
-            msg = await self.get_message(conn)
+        async with trio_websocket.open_websocket_url(self.gateway_url()) as conn:
+            self._conn = conn
+            msg = await self.get_message()
             if Opcodes.Hello.value != msg["op"]:
                 raise GatewayError("Discord did not start with HELLO payload")
             self.heartbeat_interval = msg["d"]["heartbeat_interval"]
             self._trace = msg["d"]["_trace"]
 
-            await self._send_heartbeat.send(conn)
+            await self._send_heartbeat.send("START")
 
             while True:
                 if self.sequence and self.session_id:
-                    await conn.send(self.build_payload(Opcodes.Resume, {
+                    await self.send(Opcodes.Resume, {
                         "token": self.client.token,
                         "session_id": self.session_id,
                         "sequence": self.sequence
-                    }))
+                    })
 
-                    next_msg = await self.get_message(conn)
+                    next_msg = await self.get_message()
                     if next_msg["op"] == Opcodes.InvalidSession.value:
                         self.sequence, self.session_id = None, None
                         await trio.sleep(randint(1, 5))
                         continue
-                    print(next_msg)
                     self._trace = next_msg['d']['_trace']
                 else:
-                    await conn.send(self.build_payload(Opcodes.Identify, self.identity))
-                    ready_msg = await self.get_message(conn)
+                    await self.send(Opcodes.Identify, self.identity)
+                    ready_msg = await self.get_message()
                     self.session_id = ready_msg['d']['session_id']
                     self._trace = ready_msg['d']['_trace']
-                    self.client.dispatcher(ready_msg)
+                    await self.client.dispatcher(ready_msg)
                     break
 
             self._reconnect = False
-            self._conn = conn
-            while not self._closed and not conn.closed:
-                msg = await self.get_message(conn)
+            while not self._closed and not self._conn.is_closed:
+                msg = await self.get_message()
                 if not msg:
                     break
-                self.client.dispatcher(msg)
+                await self.client.dispatcher(msg)
 
         close_code = conn.ws_client.close_code
         if close_code in (4000, 4007, 4009):
@@ -297,10 +325,16 @@ class TrioGateway(Gateway):
 
         This function is blocking, and will block until we lose connection to the discord gateway.
 
-        :return: Idealy this won't return at all, however discord isn't perfect. The client should usually restart if
+        :return: Ideally this won't return at all, however discord isn't perfect. The client should usually restart if
         this ends.
         """
         trio.run(self._start)
+
+    async def _close(self):
+        if self._conn is None:
+            raise GatewayError("You tried to close the gateway connection before it was established.")
+        await self._conn.aclose(1000)
+        self._closed = True
 
     def close(self):
         """
@@ -312,7 +346,14 @@ class TrioGateway(Gateway):
 
         :return: Nothing
         """
-        if self._conn is None:
-            raise GatewayError("You tried to close the gateway connection before it was established.")
-        self._conn.close(1000)
-        self._closed = True
+        trio.run(self._close)
+
+    def got_heartbeat(self):
+        """
+        Reset the heartbeat
+
+        This is so the thread managing the heartbeat knows that the server responded to our heartbeat, and is not dead.
+
+        :return: Nothing
+        """
+        self._got_heartbeat = True
