@@ -1,5 +1,5 @@
 from inspect import isclass, getmro
-from typing import Optional, List, Dict, _Union, Any
+from typing import List, Dict, _Union, Any
 
 from pycord.exceptions import InvalidModel
 
@@ -11,7 +11,9 @@ class Model:
     This class should be inherited by all objects that wish represent discord objects. If you'd like to create your own
     Model for your plugin, don't overwrite this class in a child. Make your own classes to represent discord objects and
     set each individual one in the config. Keep in mind when using a discord object, PyCharm or other editors may not
-    auto-suggest attribute names because they're generated dynamically.
+    auto-suggest attribute names because they're generated dynamically. As a side note, all models that have an ID
+    attribute can be used in `==` operations with other objects with an ID. Also, if it has an ID, the hash is equal to
+    that ID.
 
     :ivar d_data: The original information passed in.
     :type d_data: Dict[str, Any]
@@ -42,24 +44,38 @@ class Model:
             annotations.update(obj.__annotations__)
 
         for name, value in annotations.items():
-            if isclass(value):
-                setattr(self, name, value(self._get_val(name)))
-            else:
-                if isinstance(value, List.__class__):
-                    setattr(self, name, [value.__args__[0](v) for v in self._get_val(name)])
-                elif isinstance(value, Dict.__class__):
-                    setattr(self, name, {})
-                    for key, val in self._get_val(name).items():
-                        getattr(self, name)[value.__args__[0](key)] = value.__args__[1](val)
-                elif isinstance(value, _Union):
-                    api_value = data.get(name)
-                    if api_value:
-                        setattr(self, name, value.__args__[0](api_value))
-                    else:
-                        setattr(self, name, None)
+            if isinstance(value, _Union):
+                api_val = data.get(name)
+                if not api_val:
+                    setattr(self, name, None)
+                    continue
+                value = value.__args__[0]
+            setattr(self, name, self._load(value))
 
     def _get_val(self, name):
         api_value = self.d_data.get(name)
         if api_value is None:
             raise InvalidModel("Data received didn't fulfill object requirements.")
         return api_value
+
+    def _load(self, value):
+        if isclass(value):
+            return value
+        else:
+            if isinstance(value, List.__class__):
+                return lambda x: [self._load(value.__args__[0])(v) for v in x]
+            elif isinstance(value, Dict.__class__):
+                return lambda x: {self._load(value.__args__[0])(i): self._load(value.__args__[1])(m)
+                                  for i, m in x.items()}
+
+    def __eq__(self, other):
+        if not hasattr(self, 'id'):
+            raise NotImplementedError("This object doesn't have an ID, therefor can't be compared.")
+        if not hasattr(other, 'id'):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        if not hasattr(self, 'id'):
+            return super().__hash__()
+        return self.id

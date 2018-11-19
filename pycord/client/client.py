@@ -10,21 +10,21 @@ class Client:
 
     :cvar EVENT_HANDLERS: A dict with 2 keys, events and commands. Each has a dict with the corresponding name and
     :py:class:`~pycord.client.commands.Command` / :py:class:`~pycord.client.events.Event` object.
-    :type EVENT_HANDLERS: {"events": Dict[str, :py:class:`~pycord.client.events.Event`], "commands": Dict[str,
+    :vartype EVENT_HANDLERS: {"events": Dict[str, :py:class:`~pycord.client.events.Event`], "commands": Dict[str,
     :py:class:`~pycord.client.commands.Command`]}
     :cvar config: A reference to the :py:mod:`pycord.config`
-    :type config: :py:mod:`pycord.config`
+    :vartype config: :py:mod:`pycord.config`
 
     :ivar prefix: Supplied in __init__
-    :type prefix: Union[Callable, str]
+    :vartype prefix: Union[Callable, str]
     :ivar commands: A dict containing command name -> :py:class:`~pycord.client.commands.Command`
-    :type commands: Dict[str, :py:class:`~pycord.client.commands.Command`]
+    :vartype commands: Dict[str, :py:class:`~pycord.client.commands.Command`]
     :ivar events: A dict containing event name -> :py:class:`~pycord.client.events.Event`
-    :type events: Dict[str, :py:class:`~pycord.client.commands.Command`]
+    :vartype events: Dict[str, :py:class:`~pycord.client.commands.Command`]
     :ivar extensions: A dict containing plugin names to :py:class:`~pycord.client.extensions.Extension`
-    :type extensions: Dict[str, :py:class:`~pycord.client.extensions.Extension`]
+    :vartype extensions: Dict[str, :py:class:`~pycord.client.extensions.Extension`]
     :ivar gateway: The client's connection to the discord gateway, setup in config
-    :type gateway: :py:class:`~pycord.gateway.gate.Gateway`
+    :vartype gateway: :py:class:`~pycord.gateway.gate.Gateway`
     """
 
     import pycord.config as config

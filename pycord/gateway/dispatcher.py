@@ -45,12 +45,45 @@ class Dispatcher:
         raise NotImplementedError("This class needs to be inherited and overwritten using this outline.")
 
 
-class TrioDispatcher:
+class AsyncDispatcher(Dispatcher):
     """
-    A dispatcher build around the Trio library.
+    A dispatcher build around libraries that use async / await syntax.
 
     Dispatches events from the gateway to the Command and Event object found from extensions. Also deals with sending /
-    receiving heartbeats.
+    receiving heartbeats. Keep in mind you may have a some issues if you try to use this on a lib that's not trio, as it
+     was only built with the trio lib in mind. With that said it should work with other programs such as asyncio.
 
     :ivar client: The client this class
+    :vartype client: :py:class:`~pycord.client.client.Client`
+    :ivar commands: A list of all commands that were assigned to the client
+    :vartype commands: List[:py:class:`~pycord.client.commands.Command`]
+    :ivar listeners: List[:py:class:`~pycord.client.events.Event`]
     """
+
+    def __init__(self, client):
+        """
+        Trio gateway constructor
+
+        Here we'll load all the commands and listeners from the extensions into lists
+
+        :param client: The client this dispatcher belongs to
+        :vartype client: :py:class:`~pycord.client.client.Client`
+        """
+        self.client = client
+        self.commands = []
+        self.listeners = []
+        for extension in self.client.extensions:
+            self.commands += extension._get_commands()
+            self.listeners += extension._get_listeners()
+
+    async def __call__(self, data: Dict[str, Any]):
+        """
+        Organize all the events we receive
+
+        This function is used to manage all events received by the gateway. See
+        :py:class:`~pycord.gateway.dispatcher.Dispatcher` for more information.
+
+        :param data: A discord payload received by the gateway
+        :type data: Dict[str, Any]
+        :return: Nothing
+        """

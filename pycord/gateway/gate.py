@@ -1,5 +1,8 @@
 from random import randint
-import json
+try:
+    import ujson as json
+except ModuleNotFoundError:
+    import json
 from platform import system
 from typing import Any, List, Union, Dict
 from zlib import decompressobj
@@ -20,11 +23,11 @@ class Gateway:
      gateway. The instance variables listed are required and are explained in more detail in the constructor.
 
      :ivar sequence: This is used for reconnecting, used by client.
-     :type sequence: int
+     :vartype sequence: int
      :ivar session_id: This is used for reconnecting, used by client.
-     :type session_id: str
+     :vartype session_id: str
      :ivar _reconnect: This is used for reconnecting, used by client.
-     :type _reconnect: bool
+     :vartype _reconnect: bool
     """
 
     def __init__(self, client, sequence: int = None, session_id: str = None, _reconnect: bool = False):
@@ -100,30 +103,30 @@ class TrioGateway(Gateway):
     Not really sure what else to say, it uses the trio_websockets lib which is new but suits our purposes.
 
     :cvar VERSION: The version of the gateway we'll be using (6 at the time of writing this)
-    :type VERSION: int
+    :vartype VERSION: int
     :cvar ZLIB_SUFFIX: We'll be using zlib to compress data, which needs a suffix to end a stream
-    :type ZLIB_SUFFIX: str
+    :vartype ZLIB_SUFFIX: str
     :cvar ENCODING: The type of encoding (We'll be using json)
-    :type ENCODING: str
+    :vartype ENCODING: str
     :cvar COMPRESS: The type of compression used (We're using zlib-stream)
-    :type COMPRESS: str
+    :vartype COMPRESS: str
 
     :ivar client: The client this gateway belongs too
-    :type client: :py:class:`~pycord.client.client.Client`
+    :vartype client: :py:class:`~pycord.client.client.Client`
     :ivar buffer: A bytearray that will be used for decompressing data
-    :type buffer: bytearray
+    :vartype buffer: bytearray
     :ivar deflator: A decompressor from the builtin zlib module
-    :type deflator: Whatever zlib.decompressobj() returns
+    :vartype deflator: Whatever zlib.decompressobj() returns
     :ivar heartbeat_interval: The rate in ms that we ping the gateway, None until received by gateway.
-    :type heartbeat_interval: int
+    :vartype heartbeat_interval: int
     :ivar _trace: No clue what it is but discord supplies it on a HELLO event.
-    :type _trace: List[str]
+    :vartype _trace: List[str]
     :ivar sequence: The number received from the last dispatch. Can be replaced in kwargs for resuming.
-    :type sequence: int
+    :vartype sequence: int
     :ivar session_id: The session ID returned from the Ready event. Can be replaced in kwargs for resuming.
-    :type session_id: str
+    :vartype session_id: str
     :ivar identity: A dict that should be sent with the Identify event, contains a bunch of information.
-    :type identity: Dict[str, Any]
+    :vartype identity: Dict[str, Any]
     """
 
     VERSION = 6

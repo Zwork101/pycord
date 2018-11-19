@@ -1,32 +1,32 @@
 from typing import Optional
 
-from pycord.models.base import Model
+import pycord.config
+from .base import Model
 
 
 class User(Model):
     """
     The pycord model for discord users.
 
-    While the discord API says the discriminator is a string, we think it'd be more useful as an integer, especially
-    as it's used to calculate the avatar_url. This will be linked in the config as USER_MODEL.
+    This will be linked in the config as USER.
 
     :ivar id: The user id
-    :type id: :py:class:`~pycord.models.snowflake.Snowflake`
+    :vartype id: :py:class:`~pycord.models.snowflake.Snowflake`
     :ivar username: The username (not including discriminator)
-    :type username: str
+    :vartype username: str
     :ivar discriminator: The user's discriminator
-    :type discriminator: int
+    :vartype discriminator: int
     :ivar avatar: The hash of the user's avatar. Will be None if they don't have one.
-    :type avatar: Optional[str]
+    :vartype avatar: Optional[str]
     :ivar avatar_url: The url when getting their avatar. Adjusts if they don't have one or is a gif.
-    :type avatar_url: str
+    :vartype avatar_url: str
     :ivar mention: A shortcut to mentioning a user <@123456789>
-    :type mention: str
+    :vartype mention: str
     :ivar name: The conjoined username and discriminator (for example, Test#1234)
-    :type name: str
+    :vartype name: str
     """
 
-    id: str  # TODO: Add snowflake object
+    id: pycord.config.SNOWFLAKE
     username: str
     discriminator: int
     avatar: Optional[str]

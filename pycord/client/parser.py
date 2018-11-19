@@ -65,7 +65,7 @@ class ReParser(Parser):
     A regex command parser
 
     :ivar compiled: Compiled regex, based on the regex passed in.
-    :type compiled: Regular Expression Object
+    :vartype compiled: Regular Expression Object
     """
 
     def __init__(self, regex: str):
@@ -127,10 +127,10 @@ class PycordParser(Parser):
     are str, int, float, and yn. 'yn' returns a bool, depending on whether the block started with 'y' or 'Y'.
 
     :cvar TYPES: A dict containing type names to a corresponding callable object that returns instances.
-    :type TYPES: Dict[str, Callable]
+    :vartype TYPES: Dict[str, Callable]
 
     :ivar checks: A list of strings or lists used to matching and loading.
-    :type checks: List[Union[str, List[bool, str, str]]
+    :vartype checks: List[Union[str, List[bool, str, str]]
     """
 
     TYPES = {
