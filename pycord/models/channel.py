@@ -1,9 +1,11 @@
-from enum import Enum
-from typing import Optional, List
+from __future__ import annotations
 
-from .base import Model
+from enum import Enum
+from typing import List, Optional
+
 import pycord.config
 from pycord.helpers import parse_timestamp
+from .base import Model
 
 
 class Overwrites(Model):

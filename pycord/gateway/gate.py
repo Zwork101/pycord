@@ -1,13 +1,13 @@
+from platform import system
 from random import randint
 try:
     import ujson as json
 except ModuleNotFoundError:
     import json
-from platform import system
-from typing import Any, List, Union, Dict
+from typing import Any, Dict, List, Union
 from zlib import decompressobj
 
-from pycord.exceptions import GatewayError, AuthenticationError
+from pycord.exceptions import AuthenticationError, GatewayError
 from pycord.gateway.codes import Opcodes
 
 import trio

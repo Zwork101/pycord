@@ -1,5 +1,5 @@
-from inspect import isclass, getmro
-from typing import List, Dict, _Union, Any
+from inspect import getmro, isclass
+from typing import Any, Dict, _GenericAlias, get_type_hints
 
 from pycord.exceptions import InvalidModel
 
@@ -40,17 +40,19 @@ class Model:
         self.d_client = client
 
         annotations = {}
-        for obj in getmro(self.__class__)[1::-1]:
-            annotations.update(obj.__annotations__)
+        for obj in getmro(self.__class__):
+            if hasattr(obj, "__annotations__"):
+                annotations.update(get_type_hints(obj))
 
         for name, value in annotations.items():
-            if isinstance(value, _Union):
-                api_val = data.get(name)
-                if not api_val:
+            api_val = data.get(name)
+            if hasattr(value, "_name") and value._name is None:
+                if api_val is None:
                     setattr(self, name, None)
                     continue
                 value = value.__args__[0]
-            setattr(self, name, self._load(value))
+            loaded = self._load(value)
+            setattr(self, name, loaded(api_val))
 
     def _get_val(self, name):
         api_value = self.d_data.get(name)
@@ -60,13 +62,17 @@ class Model:
 
     def _load(self, value):
         if isclass(value):
+            if issubclass(value, Model):
+                return lambda x: value(self.d_client, x)
             return value
         else:
-            if isinstance(value, List.__class__):
+            if value._name == "List":
                 return lambda x: [self._load(value.__args__[0])(v) for v in x]
-            elif isinstance(value, Dict.__class__):
+            elif value._name == "Dict":
                 return lambda x: {self._load(value.__args__[0])(i): self._load(value.__args__[1])(m)
                                   for i, m in x.items()}
+            else:
+                pass
 
     def __eq__(self, other):
         if not hasattr(self, 'id'):

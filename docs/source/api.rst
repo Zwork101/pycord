@@ -35,6 +35,82 @@ Channel Types
     :show-inheritance:
     :members:
 
+Emoji
+=====
+
+Emoji
+-----
+
+.. autoclass:: pycord.models.emoji.Emoji
+    :show-inheritance:
+    :members:
+
+Reaction
+--------
+
+.. autoclass:: pycord.models.message.Reaction
+    :show-inheritance:
+    :members:
+
+Embed
+=====
+
+Embed
+-----
+
+.. autoclass:: pycord.models.message.Embed
+    :show-inheritance:
+    :members:
+
+Embed footer
+------------
+
+.. autoclass:: pycord.models.message.EmbedFooter
+    :show-inheritance:
+    :members:
+
+Embed image
+-----------
+
+.. autoclass:: pycord.models.message.EmbedImage
+    :show-inheritance:
+    :members:
+
+Embed thumbnail
+---------------
+
+.. autoclass:: pycord.models.message.EmbedThumbnail
+    :show-inheritance:
+    :members:
+
+Embed video
+-----------
+
+.. autoclass:: pycord.models.message.EmbedVideo
+    :show-inheritance:
+    :members:
+
+Embed provider
+--------------
+
+.. autoclass:: pycord.models.message.EmbedProvider
+    :show-inheritance:
+    :members:
+
+Embed author
+------------
+
+.. autoclass:: pycord.models.message.EmbedAuthor
+    :show-inheritance:
+    :members:
+
+Embed fields
+------------
+
+.. autoclass:: pycord.models.message.EmbedField
+    :show-inheritance:
+    :members:
+
 Invites
 =======
 
@@ -52,6 +128,50 @@ Invite Meta Data
     :show-inheritance:
     :members:
 
+Messages
+========
+
+Message
+-------
+
+.. autoclass:: pycord.models.message.Message
+    :show-inheritance:
+    :members:
+
+Message types
+-------------
+
+.. autoclass:: pycord.models.message.MessageTypes
+    :show-inheritance:
+    :members:
+
+Message activity
+----------------
+
+.. autoclass:: pycord.models.message.MessageActivity
+    :show-inheritance:
+    :members:
+
+Message activity types
+----------------------
+
+.. autoclass:: pycord.models.message.MessageActivityType
+    :show-inheritance:
+    :members:
+
+Message application
+-------------------
+
+.. autoclass:: pycord.models.message.MessageApplication
+    :show-inheritance:
+    :members:
+
+Attachment
+----------
+
+.. autoclass:: pycord.models.message.Attachment
+    :show-inheritance:
+    :members:
 
 Snowflake
 =========

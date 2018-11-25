@@ -1,7 +1,7 @@
 import os
 from typing import Callable, Union
 
-from pycord.exceptions import GatewayError, AuthenticationError
+from pycord.exceptions import AuthenticationError, GatewayError
 
 
 class Client:
@@ -42,8 +42,9 @@ class Client:
         self.events = {}
         self.extensions = {}
 
+        self.setup()
         self.gateway = self.config.GATEWAY(self)
-        self.dispatcher = self.config.DISPATCHER
+        self.dispatcher = self.config.DISPATCHER(self)
 
         # Will be set later
         self.token: str = None
@@ -73,7 +74,7 @@ class Client:
         It will then check to see if the previos gateway had sequence, session_id, or _reconnect properties, and then
         pass them in as kwargs (They'll still be passed in as None if the properties don't exist). Then it
 
-        :return:
+        :return: Nothing
         """
         self.gateway.close()
         kwargs = {}
@@ -82,3 +83,20 @@ class Client:
         if hasattr(self.gateway, "_reconnect") and self.gateway._reconnect:
             raise GatewayError("Reconnecting too early, possible infinite gateway reconnect")
         self.gateway = self.config.GATEWAY(self, **kwargs)
+
+    def setup(self):
+        """
+        Parse pycord.config's annotations and fill the file with the correct values
+
+        Because all the discord models are spread across multiple files, you need to be careful, to prevent importing
+        2 files at the same time. One way that we can get around this, is annotations. This function will go through
+        all the annotated variables equal to None, and then set the value to the annotated class. Called when you
+        initilize the client, so there's little need to call this yourself.
+
+        :return: Nothing
+        """
+        for name, annotation in self.config.__annotations__.items():
+            if not getattr(self.config, name):
+                file, cls = annotation.rsplit('.', 1)
+                loaded_cls = getattr(__import__(file, fromlist=[cls]), cls)
+                setattr(self.config, name, loaded_cls)

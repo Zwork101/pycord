@@ -1,11 +1,9 @@
-from datetime import datetime
+from __future__ import annotations
 from typing import Optional
 
-from .base import Model
-from .channel import Channel
-from .guild import Guild
-from .user import User
+import pycord.config
 from pycord.helpers import parse_timestamp
+from .base import Model
 
 
 class Invite(Model):
@@ -19,15 +17,15 @@ class Invite(Model):
     :ivar guild: The guild the invite links too
     :vartype guild: Optional[:py:class:`~pycord.models.guild.Guild`]
     :ivar channel: The channel this invite was created for
-    :vartype channel: :py:class:`~pycord.models.channel.Channel`
+    :vartype channel: Optional[:py:class:`~pycord.models.channel.Channel`]
     :ivar approximate_presence_count: The approximate amount of people currently online in the server
     :vartype approximate_presence_count: Optional[int]
     :ivar approximate_member_count: The approximate amount of people actually in the server
     :vartype approximate_member_count: Optional[int]
     """
     code: str
-    guild: Optional[Guild]
-    channel: Optional[Channel]
+    guild: Optional[pycord.config.GUILD]
+    channel: Optional[pycord.config.CHANNEL]
     approximate_presence_count = Optional[int]
     approximate_member_count = Optional[int]
 
@@ -57,7 +55,7 @@ class InviteMetadata(Model):
     :ivar revoked: If True, this invite has expired and can't be used
     :vartype revoked: bool
     """
-    inviter: User
+    inviter: pycord.config.USER
     uses: int
     max_uses: int
     max_age: int

@@ -1,5 +1,5 @@
-from typing import Any
 from types import FunctionType
+from typing import Any
 
 import pycord.config
 

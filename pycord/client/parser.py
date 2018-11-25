@@ -1,8 +1,8 @@
+import re
 from itertools import count
 from typing import Any, List
-import re
 
-from pycord.exceptions import ParseError, CannotCastTypes
+from pycord.exceptions import CannotCastTypes, ParseError
 
 
 class Parser:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Optional
 
 import pycord.config
@@ -15,7 +16,7 @@ class User(Model):
     :ivar username: The username (not including discriminator)
     :vartype username: str
     :ivar discriminator: The user's discriminator
-    :vartype discriminator: int
+    :vartype discriminator: str
     :ivar avatar: The hash of the user's avatar. Will be None if they don't have one.
     :vartype avatar: Optional[str]
     :ivar avatar_url: The url when getting their avatar. Adjusts if they don't have one or is a gif.
@@ -24,12 +25,15 @@ class User(Model):
     :vartype mention: str
     :ivar name: The conjoined username and discriminator (for example, Test#1234)
     :vartype name: str
+    :ivar member: A partial member object, only available for :py:attr:`~pycord.models.message.Message.mentions`
+    :vartype member: Optional[:py:class:`~pycord.models.guild.Member`]
     """
 
     id: pycord.config.SNOWFLAKE
     username: str
-    discriminator: int
+    discriminator: str
     avatar: Optional[str]
+    member: Optional[pycord.config.MEMBER]
 
     @property
     def avatar_url(self):
