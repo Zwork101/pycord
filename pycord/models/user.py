@@ -38,7 +38,7 @@ class User(Model):
     @property
     def avatar_url(self):
         if self.avatar:
-            if self.avatar.startswith("_a"):
+            if self.avatar.startswith("a_"):
                 return "https://cdn.discordapp.com/avatars/{user_id}/{user_avatar}.gif".format(
                     user_id=self.id,
                     user_avatar=self.avatar

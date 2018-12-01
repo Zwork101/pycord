@@ -111,6 +111,82 @@ Embed fields
     :show-inheritance:
     :members:
 
+Gateway
+=======
+
+Presence Update
+---------------
+
+.. autoclass:: pycord.models.gateway.PresenceUpdate
+    :show-inheritance:
+    :members:
+
+Activity
+--------
+
+.. autoclass:: pycord.models.gateway.Activity
+    :show-inheritance:
+    :members:
+
+Activity type
+-------------
+
+.. autoclass:: pycord.models.gateway.ActivityType
+    :show-inheritance:
+    :members:
+
+Activity timestamps
+-------------------
+
+.. autoclass:: pycord.models.gateway.ActivityTimestamps
+    :show-inheritance:
+    :members:
+
+Activity party
+--------------
+
+.. autoclass:: pycord.models.gateway.ActivityParty
+    :show-inheritance:
+    :members:
+
+Activity assets
+---------------
+
+.. autoclass:: pycord.models.gateway.ActivityAssets
+    :show-inheritance:
+    :members:
+
+Activity secrets
+----------------
+
+.. autoclass:: pycord.models.gateway.ActivitySecrets
+    :show-inheritance:
+    :members:
+
+Guilds
+======
+
+Guild
+-----
+
+.. autoclass:: pycord.models.guild.Guild
+    :show-inheritance:
+    :members:
+
+Member
+------
+
+.. autoclass:: pycord.models.guild.Member
+    :show-inheritance:
+    :members:
+
+Role
+----
+
+.. autoclass:: pycord.models.guild.Role
+    :show-inheritance:
+    :members:
+
 Invites
 =======
 
@@ -184,6 +260,23 @@ User
 ====
 
 .. autoclass:: pycord.models.user.User
+    :show-inheritance:
+    :members:
+
+Voice
+=====
+
+VoiceState
+----------
+
+.. autoclass:: pycord.models.voice.VoiceState
+    :show-inheritance:
+    :members:
+
+VoiceRegion
+-----------
+
+.. autoclass:: pycord.models.voice.VoiceRegion
     :show-inheritance:
     :members:
 
