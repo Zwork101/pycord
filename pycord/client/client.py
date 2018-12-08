@@ -1,7 +1,9 @@
 import os
-from typing import Callable, Union
+from typing import Callable, List, Union
 
+from pycord.client.extensions import Extension
 from pycord.exceptions import AuthenticationError, GatewayError
+from pycord.helpers import prefix
 
 
 class Client:
@@ -15,8 +17,8 @@ class Client:
     :cvar config: A reference to the :py:mod:`pycord.config`
     :vartype config: :py:mod:`pycord.config`
 
-    :ivar prefix: Supplied in __init__
-    :vartype prefix: Union[Callable, str]
+    :ivar prefix: Either a callable object from passed in args, or the result of :py:func:`~pycord.helpers.prefix`
+    :vartype prefix: Union[Callable]
     :ivar commands: A dict containing command name -> :py:class:`~pycord.client.commands.Command`
     :vartype commands: Dict[str, :py:class:`~pycord.client.commands.Command`]
     :ivar events: A dict containing event name -> :py:class:`~pycord.client.events.Event`
@@ -30,14 +32,14 @@ class Client:
     import pycord.config as config
     EVENT_HANDLERS = {"events": {}, "commands": {}}
 
-    def __init__(self, prefix: Union[Callable, str]):
+    def __init__(self, cmd_prefix: Union[Callable, str]):
         """
         Client Setup
 
-        :param prefix: The prefix commands will start with
+        :param prefix: The prefix commands will start with, can also be one of the functions from the helper functions.
         :type prefix: Union[Callable, str]
         """
-        self.prefix = prefix
+        self.prefix = cmd_prefix if callable(cmd_prefix) else prefix(cmd_prefix)
         self.commands = {}
         self.events = {}
         self.extensions = {}
@@ -48,6 +50,7 @@ class Client:
 
         # Will be set later
         self.token: str = None
+        self.user: self.config.USER = None
         self._presence: dict = None
 
     def run(self, token: str = None):
@@ -100,3 +103,35 @@ class Client:
                 file, cls = annotation.rsplit('.', 1)
                 loaded_cls = getattr(__import__(file, fromlist=[cls]), cls)
                 setattr(self.config, name, loaded_cls)
+
+    def get_command(self, message: "pycord.models.message.Message"):
+        """
+        Given a message, return Command objects that might work.
+
+        This method is mainly just to help out the dispatcher, but it might also help other so that's why it's in the
+        client. When I say find commands that 'might' work, that's because it doesn't check the command parser yet.
+
+        :param message: The message that will be checked
+        :type message: :py:class:`~pycord.models.message.Message`
+        :return: A list of functions that match the message (can be empty)
+        :rtype: List[:py:class:`~pycord.client.commands.Command`]
+        """
+        cmd_index = self.prefix(message)
+        if not cmd_index:
+            return []
+        cmd_name, extra_info = message.content[cmd_index:].split(' ')[0], \
+                               ' '.join(message.content[cmd_index:].split(' ')[1:])
+        return [(self.commands[cmd], extra_info) for cmd in self.commands if cmd_name == cmd]
+
+    def load_extensions(self, extensions: List[Union[str, "pycord.client.extensions"]]):
+        for extension in extensions:
+            if isinstance(extension, Extension):
+                self.commands += extension._get_commands()
+                self.events += extension._get_listeners()
+            else:
+                file, cls = extension.rsplit('.', 1)
+                loaded_cls = getattr(__import__(file, fromlist=[cls]), cls)
+                for cmd in loaded_cls._get_commands():
+                    self.commands[cmd.name] = cmd
+                for event in loaded_cls._get_listeners():
+                    self.events[event.name] = event

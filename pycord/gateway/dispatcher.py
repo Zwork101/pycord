@@ -1,5 +1,9 @@
 from typing import Any, Dict
 
+import pycord.config
+from pycord.gateway.codes import Opcodes
+from pycord.models.message import Message
+
 
 class Dispatcher:
     """
@@ -31,7 +35,7 @@ class Dispatcher:
 
         1. Call .got_heartbeat() on client.gateway when you receive a heartbeat ACK (op code 11)
         2. Send a heartbeat using client.gateway.send when you receive a heartbeat (op code 1)
-        3. Trigger all correct Command objects when you receive a MESSAGE_CREATE
+        3. Trigger all correct Command objects when you receive a MESSAGE_CREATE (create Message object for it)
         4. Trigger all correct Event objects when you receive any event.
         5. Pro-Tip: Discord is weird and data MAY be a list. If that's the case, just ignore it and move on
 
@@ -76,6 +80,12 @@ class AsyncDispatcher(Dispatcher):
             self.commands += extension._get_commands()
             self.listeners += extension._get_listeners()
 
+        self.events = {
+            "GUILD_CREATE": self.client.config.GUILD,
+            "PRESENCE_UPDATE": self.client.config.PRESENCE_UPDATE,
+            "MESSAGE_CREATE": self.client.config.MESSAGE
+        }
+
     async def __call__(self, data: Dict[str, Any]):
         """
         Organize all the events we receive
@@ -87,3 +97,23 @@ class AsyncDispatcher(Dispatcher):
         :type data: Dict[str, Any]
         :return: Nothing
         """
+        if data['op'] == Opcodes.Heartbeat.value:
+            await self.client.gateway.send(Opcodes.Heartbeat, {
+                "d": self.client.gateway.sequence
+            })
+        elif data['op'] == Opcodes.HeartbeatACK.value:
+            self.client.gateway.got_heartbeat()
+        elif data['op'] == Opcodes.Reconnect.value:
+            self.client.reconnect()
+        elif data['op'] == Opcodes.Dispatch.value:
+            if data['t'] == 'READY':
+                self.client.user = self.client.config.USER(self.client, data['d']['user'])
+                self.client.gateway.session_id = data['d']['session_id']
+            else:
+                event = self.events.get(data['t'])
+                if event and data['t'] == "MESSAGE_CREATE":
+                    msg = Message(self.client, data['d'])
+                    for cmd, parsed_msg in self.client.get_command(msg):
+                        await cmd.invoke(msg, parsed_msg)
+
+

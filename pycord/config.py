@@ -8,7 +8,7 @@ event = ContextVar("event")
 COMMAND_PARSER: "pycord.client.parser.PycordParser" = None
 DISPATCHER: "pycord.gateway.dispatcher.AsyncDispatcher" = None
 GATEWAY: "pycord.gateway.gate.TrioGateway" = None
-COMMAND: "pycord.client.commands.Command" = None
+COMMAND: "pycord.client.commands.PycordCommand" = None
 EVENT: "pycord.client.events.Event" = None
 
 # Models

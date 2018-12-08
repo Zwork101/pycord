@@ -2,9 +2,10 @@ from inspect import getmro, isclass
 from typing import Any, Dict, _GenericAlias, get_type_hints
 
 from pycord.exceptions import InvalidModel
+from pycord.gateway.magic import ModelMagic
 
 
-class Model:
+class Model(metaclass=ModelMagic):
     """
     The model object is used to represent objects returned by the API.
 
@@ -46,10 +47,10 @@ class Model:
 
         for name, value in annotations.items():
             api_val = data.get(name)
+            if api_val is None:
+                setattr(self, name, None)
+                continue
             if hasattr(value, "_name") and value._name is None:
-                if api_val is None:
-                    setattr(self, name, None)
-                    continue
                 value = value.__args__[0]
             loaded = self._load(value)
             setattr(self, name, loaded(api_val))
@@ -85,3 +86,22 @@ class Model:
         if not hasattr(self, 'id'):
             return super().__hash__()
         return self.id
+
+    def get(self, *args):
+        """
+        This method is to fetch the model
+
+        This method is only available on major models. Models like 'Embed' don't have this method. A good rule of thumb
+        is that, if the model has another model in it's name, or is *only* used as a way to hold information in
+        another model's field, this method is not supported. Also, all models that can be used with contexts support
+        this.
+
+        :param args: Usually only 1 argument, a snowflake, however that's not always the case.
+        :type args: Any
+        :return: The a instance of the model which was invoked
+        :rtype: Any
+        """
+        raise NotImplementedError("This model doesn't support fetching")
+
+    def __getattr__(self, item):
+        return object.__getattribute__(self, item)

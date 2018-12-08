@@ -10,6 +10,10 @@ class CannotCastTypes(PycordInternalError):
     pass
 
 
+class NoContextAvailable(PycordInternalError):
+    pass
+
+
 class ReusedCommandName(PycordError):
     pass
 

@@ -4,6 +4,7 @@ try:
     import ujson as json
 except ModuleNotFoundError:
     import json
+import time
 from typing import Any, Dict, List, Union
 from zlib import decompressobj
 
@@ -168,6 +169,7 @@ class TrioGateway(Gateway):
         self._closed = False
         self._send_heartbeat, self._receive_heartbeat = trio.open_memory_channel(1)
         self._conn: trio_websocket.WebSocketConnection = None
+        self._forced_heartbeat = None
 
     @property
     def identity(self):
@@ -227,13 +229,20 @@ class TrioGateway(Gateway):
         """
         await self._receive_heartbeat.receive()
         await trio.sleep(self.heartbeat_interval // 1000)
+        while not self._closed or self._conn.closed is not None:
+            if self._forced_heartbeat is not None:
+                hb = self._forced_heartbeat
+                self._forced_heartbeat = None
+                await trio.sleep(int(time.time() - hb))
+            else:
+                break
         if not self._got_heartbeat:
-            if not self._closed:
+            if not self._closed or self._conn.closed is not None:
                 self.client.reconnect()
         else:
             self._got_heartbeat = False
             await self.send(Opcodes.Heartbeat, self.sequence)
-        if not self._conn.is_closed and not self._closed:
+        if not self._closed or self._conn.closed is not None:
             await self.heartbeat()
 
     async def get_message(self):
@@ -303,13 +312,17 @@ class TrioGateway(Gateway):
                     break
 
             self._reconnect = False
-            while not self._closed and not self._conn.is_closed:
+            while not self._closed and conn.closed is None:
                 msg = await self.get_message()
+
                 if not msg:
                     break
+                if msg['s']:
+                    self.sequence = msg['s']
+
                 await self.client.dispatcher(msg)
 
-        close_code = conn.ws_client.close_code
+        close_code = conn.closed.code
         if close_code in (4000, 4007, 4009):
             self.client.reconnect()
         elif close_code == 4004:
@@ -321,6 +334,7 @@ class TrioGateway(Gateway):
         async with trio.open_nursery() as nursery:
             nursery.start_soon(self.run)
             nursery.start_soon(self.heartbeat)
+            print("Started Nursery")
 
     def start(self):
         """

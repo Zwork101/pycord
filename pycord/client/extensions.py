@@ -116,12 +116,11 @@ class PycordExtentsion(Extension):
         :return: A function to, to decorate the command
         :rtype: FunctionType
         """
-        cmd = pycord.config.COMMAND(name, pattern, **kwargs)
-
         def func_wrapper(func):
+            print(func, name, pattern)
             func._pycord = {
                 "type": "command",
-                "data": cmd
+                "data": pycord.config.COMMAND(func, name, pattern, **kwargs)
             }
             return func
         return func_wrapper

@@ -49,7 +49,7 @@ class Parser:
 
           {"name": "foo", "value": "bar", "type": "int"}
 
-        However feel free to add more to the list, if you know other plugins can use those values.
+        However feel free to add more to the dict, if you know other plugins can use those values.
 
 
         :param args: Should be changed depending on requirements
@@ -251,19 +251,17 @@ class PycordParser(Parser):
         for part in [s for s in self.checks if isinstance(s, str)]:
             index = text.find(part)
             if index == -1:
-                results.append(text)
                 break
             result, text = text[:index], text[index + len(part):]
             results.append(result)
-        else:
-            results.append(text)
+        results.append(text)
 
         if isinstance(self.checks[0], str):
             results = results[1:]
         if isinstance(self.checks[-1], str):
             results = results[:1]
 
-        if len(results) < len([c for c in self.checks if isinstance(c, list) and c[0]]):
+        if len([r for r in results if r]) < len([c for c in self.checks if isinstance(c, list) and c[0]]):
             return
         return results
 
