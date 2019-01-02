@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import pycord.config
 from pycord.helpers import parse_timestamp
-from .base import Model
+from .base import comboproperty, Model
 
 
 class MessageTypes(Enum):
@@ -80,7 +80,7 @@ class MessageActivity(Model):
     type: int
     party_id: Optional[str]
 
-    @property
+    @comboproperty
     def activity_type(self):
         for activity in MessageActivityType:
             if activity.value == self.type:
@@ -324,7 +324,7 @@ class Embed(Model):
     author: Optional[pycord.config.EMBED_AUTHOR]
     fields: Optional[List[pycord.config.EMBED_FIELD]]
 
-    @property
+    @comboproperty
     def timestamp_date(self):
         return parse_timestamp(self.timestamp) if self.timestamp else None
 
@@ -425,16 +425,16 @@ class Message(Model):
     activity: Optional[pycord.config.MESSAGE_ACTIVITY]
     application: Optional[pycord.config.MESSAGE_APPLICATION]
 
-    @property
+    @comboproperty
     def message_type(self):
-        for enum in MessageActivityType:
+        for enum in MessageTypes:
             if enum.value == self.type:
                 return enum
 
-    @property
+    @comboproperty
     def timestamp_date(self):
         return parse_timestamp(self.timestamp)
 
-    @property
+    @comboproperty
     def edited_timestamp_date(self):
         return parse_timestamp(self.edited_timestamp) if self.edited_timestamp else None

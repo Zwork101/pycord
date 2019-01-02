@@ -1,4 +1,4 @@
-from .base import Model
+from .base import comboproperty, Model
 from .channel import Channel, ChannelTypes, Overwrites
 from .emoji import Emoji
 from .gateway import Activity, ActivityAssets, ActivityParty, ActivityTimestamps, ActivitySecrets, PresenceUpdate
@@ -9,6 +9,6 @@ from .message import (
     Message, MessageActivity, MessageApplication
 )
 from .snowflake import Snowflake
-from .user import User
+from .user import PremiumTypes, User, UserFlags
 from .voice import VoiceState
 from .webhook import Webhook

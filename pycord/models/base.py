@@ -1,8 +1,28 @@
 from inspect import getmro, isclass
+import functools
 from typing import Any, Dict, _GenericAlias, get_type_hints
 
 from pycord.exceptions import InvalidModel
 from pycord.gateway.magic import ModelMagic
+
+
+class comboproperty:
+    """
+    This class is used to create a property that can be used for instances and classes
+
+    Like the combomethod package, this property works for both instances and classes. This is not a complete version,
+    you can't also create a setter for the property. I could have added that feature however pycord simply doesn't need
+    it.
+
+    :ivar fget: The function that this property will call on.
+    :vartype fget: Callable
+    """
+
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, obj=None, objtype=None):
+        return self.fget.__get__(obj if obj else objtype, objtype)()
 
 
 class Model(metaclass=ModelMagic):

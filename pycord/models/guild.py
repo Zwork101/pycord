@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import pycord.config
 from pycord.helpers import parse_timestamp
-from .base import Model
+from .base import comboproperty, Model
 
 
 class Role(Model):
@@ -40,7 +40,7 @@ class Role(Model):
     managed: bool
     mentioned: bool
 
-    @property
+    @comboproperty
     def mention(self):
         return "<@&{role_id}>".format(role_id=self.id)
 
@@ -80,11 +80,11 @@ class Member(Model):
     mute: bool
     guild_id: Optional[pycord.config.SNOWFLAKE]
 
-    @property
+    @comboproperty
     def join_date(self):
         return parse_timestamp(self.joined_at)
 
-    @property
+    @comboproperty
     def mention(self):
         if self.nick:
             return "<@!{user_id}>".format(user_id=self.user.id)
@@ -201,7 +201,7 @@ class Guild(Model):
     channels: Optional[List[pycord.config.CHANNEL]]
     presences: Optional[List[pycord.config.PRESENCE_UPDATE]]
 
-    @property
+    @comboproperty
     def icon_url(self):
         if self.icon:
             return "https://cdn.discordapp.com/icons/{guild_id}/{guild_icon}.png".format(
@@ -209,7 +209,7 @@ class Guild(Model):
                 guild_icon=self.icon
             )
 
-    @property
+    @comboproperty
     def splash_url(self):
         if self.splash:
             return "https://cdn.discordapp.com/splashes/{guild_id}/{guild_splash}.png".format(
@@ -217,6 +217,6 @@ class Guild(Model):
                 guild_splash=self.splash
             )
 
-    @property
+    @comboproperty
     def joined_at_date(self):
         return parse_timestamp(self.joined_at) if self.joined_at else None

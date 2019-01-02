@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import pycord.config
 from pycord.helpers import parse_timestamp
-from .base import Model
+from .base import comboproperty, Model
 
 
 class Overwrites(Model):
@@ -119,12 +119,12 @@ class Channel(Model):
     parent_id: Optional[pycord.config.SNOWFLAKE]
     last_pin_timestamp: Optional[str]
 
-    @property
+    @comboproperty
     def channel_type(self):
         for channel_type in ChannelTypes:
             if channel_type.value == self.type:
                 return channel_type
 
-    @property
+    @comboproperty
     def last_pin_date(self):
         return parse_timestamp(self.last_pin_timestamp) if self.last_pin_timestamp else None

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 import pycord.config
-from .base import Model
+from .base import comboproperty, Model
 
 
 class Emoji(Model):
@@ -37,7 +37,7 @@ class Emoji(Model):
     managed: Optional[bool]
     animated: Optional[bool]
 
-    @property
+    @comboproperty
     def text(self):
         if not self.id:
             return self.name

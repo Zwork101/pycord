@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List, Optional
 
 import pycord.config
-from .base import Model
+from .base import comboproperty, Model
 
 
 class ActivityType(Enum):
@@ -45,11 +45,11 @@ class ActivityTimestamps(Model):
     start: Optional[int]
     end: Optional[int]
 
-    @property
+    @comboproperty
     def start_date(self):
         return datetime.utcfromtimestamp(self.start // 1000)
 
-    @property
+    @comboproperty
     def end_date(self):
         return datetime.utcfromtimestamp(self.end // 1000)
 
@@ -158,7 +158,7 @@ class Activity(Model):
     instance: Optional[bool]
     flags: Optional[int]
 
-    @property
+    @comboproperty
     def activity_type(self):
         for activity in ActivityType:
             if activity.value == self.type:
@@ -191,3 +191,6 @@ class PresenceUpdate(Model):
     guild_id: pycord.config.SNOWFLAKE
     status: str
     activities: List[pycord.config.ACTIVITY]
+
+
+

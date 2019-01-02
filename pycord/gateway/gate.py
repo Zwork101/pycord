@@ -212,6 +212,7 @@ class TrioGateway(Gateway):
         }).encode()
 
     async def send(self, op: Union[Opcodes, int], data: Union[Dict[str, Any], int]):
+        print("Sent:", op, data)
         await self._conn.send_message(
             self.build_payload(op, data)
         )
@@ -227,7 +228,8 @@ class TrioGateway(Gateway):
         :type conn: trio_websockets.WebSocketClientProtocol
         :return: Nothing. This function should not end unless the connection dies.
         """
-        await self._receive_heartbeat.receive()
+        if not self.heartbeat_interval:
+            await self._receive_heartbeat.receive()
         await trio.sleep(self.heartbeat_interval // 1000)
         while not self._closed or self._conn.closed is not None:
             if self._forced_heartbeat is not None:
@@ -267,6 +269,7 @@ class TrioGateway(Gateway):
                 continue
             loaded = json.loads(self.deflator.decompress(self.buffer).decode())
             self.buffer = bytearray()
+            print("GOT:", loaded)
             return loaded
 
     async def run(self):
@@ -322,7 +325,7 @@ class TrioGateway(Gateway):
 
                 await self.client.dispatcher(msg)
 
-        close_code = conn.closed.code
+        close_code = conn.closed.code.value
         if close_code in (4000, 4007, 4009):
             self.client.reconnect()
         elif close_code == 4004:
@@ -350,7 +353,7 @@ class TrioGateway(Gateway):
     async def _close(self):
         if self._conn is None:
             raise GatewayError("You tried to close the gateway connection before it was established.")
-        await self._conn.aclose(1000)
+        await self._conn.aclose(1001)
         self._closed = True
 
     def close(self):

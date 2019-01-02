@@ -3,7 +3,7 @@ from typing import Optional
 
 import pycord.config
 from pycord.helpers import parse_timestamp
-from .base import Model
+from .base import comboproperty, Model
 
 
 class Invite(Model):
@@ -63,6 +63,6 @@ class InviteMetadata(Model):
     created_at: str
     revoked: bool
 
-    @property
+    @comboproperty
     def creation_date(self):
         return parse_timestamp(self.created_at)
