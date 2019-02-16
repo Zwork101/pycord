@@ -240,7 +240,7 @@ class TrioGateway(Gateway):
                 break
         if not self._got_heartbeat:
             if not self._closed or self._conn.closed is not None:
-                self.client.reconnect()
+                await self.client.reconnect()
         else:
             self._got_heartbeat = False
             await self.send(Opcodes.Heartbeat, self.sequence)
@@ -325,21 +325,14 @@ class TrioGateway(Gateway):
 
                 await self.client.dispatcher(msg)
 
-        close_code = conn.closed.code.value
-        if close_code in (4000, 4007, 4009):
-            self.client.reconnect()
-        elif close_code == 4004:
-            raise AuthenticationError("Invalid token")
-        elif close_code != 1000:
-            raise GatewayError("Unexpected error occurred: {0}".format(close_code))
+        if not self._closed:
+            close_code = conn.closed.code.value
+            if close_code == 4004:
+                raise AuthenticationError("Invalid token")
+            else:
+                self.client.reconnect()
 
-    async def _start(self):
-        async with trio.open_nursery() as nursery:
-            nursery.start_soon(self.run)
-            nursery.start_soon(self.heartbeat)
-            print("Started Nursery")
-
-    def start(self):
+    async def start(self):
         """
         Start the gateway to start receiving discord events
 
@@ -348,15 +341,12 @@ class TrioGateway(Gateway):
         :return: Ideally this won't return at all, however discord isn't perfect. The client should usually restart if
         this ends.
         """
-        trio.run(self._start)
+        async with trio.open_nursery() as nursery:
+            nursery.start_soon(self.run)
+            nursery.start_soon(self.heartbeat)
+            print("Started Nursery")
 
-    async def _close(self):
-        if self._conn is None:
-            raise GatewayError("You tried to close the gateway connection before it was established.")
-        await self._conn.aclose(1001)
-        self._closed = True
-
-    def close(self):
+    async def close(self):
         """
         Close the gateway connection and stop the worker dispatching events.
 
@@ -366,7 +356,11 @@ class TrioGateway(Gateway):
 
         :return: Nothing
         """
-        trio.run(self._close)
+        if self._conn is None:
+            raise GatewayError("You tried to close the gateway connection before it was established.")
+        if self._conn.closed is None:
+            await self._conn.aclose(1001)
+        self._closed = True
 
     def got_heartbeat(self):
         """

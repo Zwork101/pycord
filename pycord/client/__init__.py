@@ -4,9 +4,7 @@ from .client import (
 from .commands import (
     Command, PycordCommand
 )
-from .events import (
-    Event
-)
+
 from .extensions import (
     Extension, PycordExtentsion
 )

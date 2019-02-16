@@ -104,7 +104,7 @@ class AsyncDispatcher(Dispatcher):
         elif data['op'] == Opcodes.HeartbeatACK.value:
             self.client.gateway.got_heartbeat()
         elif data['op'] == Opcodes.Reconnect.value:
-            self.client.reconnect()
+            await self.client.reconnect()
         elif data['op'] == Opcodes.Dispatch.value:
             if data['t'] == 'READY':
                 self.client.user = self.client.config.USER(self.client, data['d']['user'])

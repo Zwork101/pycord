@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import pycord.config
 from .base import comboproperty, Model
+from pycord.helpers import parse_timestamp
 
 
 class ActivityType(Enum):
@@ -193,4 +194,20 @@ class PresenceUpdate(Model):
     activities: List[pycord.config.ACTIVITY]
 
 
+class ChannelPinsUpdate(Model):
+    """
+    The pin update model to represent when a pin is deleted to removed.
 
+    This will be linked under CHANNEL_PINS_UPDATE. This model is used for when a pin is added, or removed. It is not
+    used however when a message is deleted, that was pinned.
+
+    :ivar channel_id: The ID of the channel the pin was in
+    :vartype channel_id: :py:class:`~pycord.models.snowflake.Snowflake`
+    :ivar last_pin_timestamp: # TODO: Get this model done
+    """
+    channel_id: pycord.config.SNOWFLAKE
+    last_pin_timestamp: Optional[str]
+
+    @property
+    def last_pin_date(self):
+        return parse_timestamp(self.last_pin_timestamp) if self.last_pin_timestamp else None

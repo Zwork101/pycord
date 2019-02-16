@@ -5,6 +5,8 @@ from pycord.client.extensions import Extension
 from pycord.exceptions import AuthenticationError, GatewayError
 from pycord.helpers import prefix
 
+import trio
+
 
 class Client:
     """
@@ -67,9 +69,9 @@ class Client:
         if not token and 'TOKEN' not in os.environ:
             raise AuthenticationError("Token not supplied and 'TOKEN' is not an environment variable")
         self.token = token or os.environ['TOKEN']
-        self.gateway.start()
+        trio.run(self.gateway.start)
 
-    def reconnect(self):
+    async def reconnect(self):
         """
         Close connection to the discord API, and then create a new one.
 
@@ -79,13 +81,14 @@ class Client:
 
         :return: Nothing
         """
-        self.gateway.close()
+        await self.gateway.close()
         kwargs = {}
         for name in ("sequence", "session_id", "_reconnect"):
             kwargs[name] = getattr(self.gateway, name, None)
         if hasattr(self.gateway, "_reconnect") and self.gateway._reconnect:
             raise GatewayError("Reconnecting too early, possible infinite gateway reconnect")
         self.gateway = self.config.GATEWAY(self, **kwargs)
+        await self.gateway.start()
 
     def setup(self):
         """
@@ -100,6 +103,7 @@ class Client:
         """
         for name, annotation in self.config.__annotations__.items():
             if not getattr(self.config, name):
+                annotation = annotation[5:-1]
                 file, cls = annotation.rsplit('.', 1)
                 loaded_cls = getattr(__import__(file, fromlist=[cls]), cls)
                 setattr(self.config, name, loaded_cls)
